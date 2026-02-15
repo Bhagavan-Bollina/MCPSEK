@@ -26,10 +26,49 @@
 ### Prerequisites
 
 - Go 1.22 or higher
-- PostgreSQL 16
+- Docker & Docker Compose (recommended)
 - Git
 
 ### Installation
+
+#### Option 1: Docker Setup (Recommended - Easiest!)
+
+1. Clone the repository:
+```bash
+git clone https://github.com/mcpsek/mcpsek.git
+cd mcpsek
+```
+
+2. Create configuration:
+```bash
+cp .env.example .env
+```
+
+3. Update `.env` with Docker database URL:
+```bash
+# Edit .env and set:
+MCPSEK_DB_URL=postgres://mcpsek:mcpsek@localhost:5432/mcpsek?sslmode=disable
+```
+
+4. Start PostgreSQL with Docker:
+```bash
+docker-compose up -d
+```
+
+5. Wait for database to be ready and verify:
+```bash
+sleep 5
+docker-compose exec postgres psql -U mcpsek -d mcpsek -c '\dt'
+```
+
+6. Run the server:
+```bash
+make run
+```
+
+The server will start on `http://localhost:8080`
+
+#### Option 2: Local PostgreSQL Setup
 
 1. Clone the repository:
 ```bash
@@ -42,15 +81,19 @@ cd mcpsek
 make deps
 ```
 
-3. Setup database:
+3. Setup local PostgreSQL database:
 ```bash
+# Create database
+createdb mcpsek
+
+# Run migrations
 make db-setup
 ```
 
 4. Create configuration:
 ```bash
 cp .env.example .env
-# Edit .env with your settings
+# Edit .env with your PostgreSQL credentials
 ```
 
 5. Run the server:
@@ -58,19 +101,29 @@ cp .env.example .env
 make run
 ```
 
-The server will start on `http://localhost:8080` (or the port specified in your `.env` file).
-
 ## Configuration
 
 mcpsek is configured via environment variables. See `.env.example` for all available options.
 
-Key settings:
-- `MCPSEK_DB_URL`: PostgreSQL connection string
+### Key Settings:
+
+**Database (Required):**
+- Docker: `MCPSEK_DB_URL=postgres://mcpsek:mcpsek@localhost:5432/mcpsek?sslmode=disable`
+- Local: `MCPSEK_DB_URL=postgres://username:password@localhost:5432/mcpsek?sslmode=disable`
+
+**Server:**
 - `MCPSEK_HTTP_ADDR`: Server address (default: `:8080`)
-- `MCPSEK_SCAN_WORKERS`: Number of concurrent scanners (default: `4`)
-- `MCPSEK_SCAN_INTERVAL`: How often to rescan servers (default: `24h`)
-- `MCPSEK_DISCOVERY_INTERVAL`: How often to discover new servers (default: `168h` / 7 days)
-- `MCPSEK_GITHUB_TOKEN`: Optional GitHub token for higher API rate limits
+- `MCPSEK_CLONE_DIR`: Directory for cloned repos (default: `/tmp/mcpsek-repos`)
+
+**Scanning:**
+- `MCPSEK_SCAN_WORKERS`: Concurrent scanners (default: `4`, increase for faster scanning)
+- `MCPSEK_SCAN_INTERVAL`: Rescan frequency (default: `24h`)
+- `MCPSEK_DISCOVERY_INTERVAL`: Discovery frequency (default: `168h` / 7 days)
+
+**Optional:**
+- `MCPSEK_GITHUB_TOKEN`: GitHub PAT for higher API rate limits (get one at https://github.com/settings/tokens)
+- `MCPSEK_API_RATE_LIMIT`: API requests per minute (default: `100`)
+- `MCPSEK_SHODAN_API_KEY`: For advanced exposure scanning
 
 ## API Endpoints
 
@@ -217,12 +270,51 @@ MIT
 
 Contributions are welcome! Please open an issue or pull request.
 
+## Docker Commands
+
+```bash
+# Start PostgreSQL
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop PostgreSQL
+docker-compose down
+
+# Reset database (destroys all data)
+docker-compose down -v
+docker-compose up -d
+
+# Access PostgreSQL shell
+docker-compose exec postgres psql -U mcpsek -d mcpsek
+
+# View database tables
+docker-compose exec postgres psql -U mcpsek -d mcpsek -c '\dt'
+```
+
+## Troubleshooting
+
+### Database Connection Issues
+
+**Error: "password authentication failed"**
+- Using Docker: Make sure `.env` has `MCPSEK_DB_URL=postgres://mcpsek:mcpsek@localhost:5432/mcpsek?sslmode=disable`
+- Using local PostgreSQL: Update connection string with your username/password
+
+**Error: "database does not exist"**
+- Docker: Run `docker-compose down -v && docker-compose up -d`
+- Local: Run `createdb mcpsek` then `make db-setup`
+
+**Error: "connection refused"**
+- Docker: Run `docker-compose ps` to check if PostgreSQL is running
+- Local: Run `brew services start postgresql@16` (macOS) or `sudo systemctl start postgresql` (Linux)
+
 ## Roadmap
 
+- [x] Docker deployment support
 - [ ] PyPI discovery implementation
 - [ ] Cursor-based pagination for large datasets
 - [ ] Real-time scanning via websockets
-- [ ] Docker deployment support
 - [ ] Comprehensive test suite
 - [ ] CI/CD pipeline
 - [ ] Performance benchmarks
