@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Server.Name }} - mcpsek</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1><a href="/">mcpsek</a></h1>
+    </header>
+
+    <main>
+        <section class="server-header">
+            <h2>{{ .Server.Name }}</h2>
+            <div class="trust-score {{ if lt .Server.TrustScore 50 }}critical{{ else if lt .Server.TrustScore 75 }}warning{{ else }}pass{{ end }}">
+                <span class="score">{{ .Server.TrustScore }}</span>
+                <span class="label">Trust Score</span>
+            </div>
+        </section>
+
+        <section class="server-info">
+            <p><strong>Source:</strong> <a href="{{ .Server.SourceURL }}" target="_blank">{{ .Server.SourceURL }}</a></p>
+            {{ if .Server.Description }}<p><strong>Description:</strong> {{ .Server.Description }}</p>{{ end }}
+            {{ if .Server.Author }}<p><strong>Author:</strong> {{ .Server.Author }}</p>{{ end }}
+            {{ if .Server.License }}<p><strong>License:</strong> {{ .Server.License }}</p>{{ end }}
+            <p><strong>Tools:</strong> {{ .Server.ToolsCount }}</p>
+            <p><strong>Last Scanned:</strong> {{ if .Server.LastScanned }}{{ .Server.LastScanned.Format "2006-01-02 15:04" }}{{ else }}Never{{ end }}</p>
+        </section>
+
+        {{ if .LatestScan }}
+        <section class="security-checks">
+            <h3>Security Checks</h3>
+
+            <div class="check {{ .LatestScan.ToolIntegrityStatus }}">
+                <h4>Tool Integrity <span class="status">{{ .LatestScan.ToolIntegrityStatus }}</span></h4>
+                <p>Scans tool descriptions for poisoning indicators and hidden instructions.</p>
+            </div>
+
+            <div class="check {{ .LatestScan.AuthStatus }}">
+                <h4>Authentication Posture <span class="status">{{ .LatestScan.AuthStatus }}</span></h4>
+                <p>Checks for proper authentication mechanisms and committed secrets.</p>
+            </div>
+
+            <div class="check {{ .LatestScan.ExposureStatus }}">
+                <h4>Endpoint Exposure <span class="status">{{ .LatestScan.ExposureStatus }}</span></h4>
+                <p>Identifies network-accessible servers with security risks.</p>
+            </div>
+        </section>
+        {{ end }}
+
+        {{ if .Tools }}
+        <section class="tools">
+            <h3>Tool Definitions ({{ len .Tools }})</h3>
+            <ul>
+                {{ range .Tools }}
+                <li>
+                    <strong>{{ .ToolName }}</strong>
+                    {{ if .Description }}<p>{{ .Description }}</p>{{ end }}
+                </li>
+                {{ end }}
+            </ul>
+        </section>
+        {{ end }}
+
+        {{ if .Mutations }}
+        <section class="mutations">
+            <h3>Mutation History</h3>
+            <ul>
+                {{ range .Mutations }}
+                <li class="{{ .Severity }}">
+                    <span class="badge">{{ .Severity }}</span>
+                    <strong>{{ .ToolName }}</strong>
+                    {{ if .SeverityReason }}<p>{{ .SeverityReason }}</p>{{ end }}
+                    <span class="timestamp">{{ .DetectedAt.Format "2006-01-02 15:04" }}</span>
+                </li>
+                {{ end }}
+            </ul>
+        </section>
+        {{ end }}
+    </main>
+
+    <footer>
+        <p><a href="/">← Back to Home</a></p>
+    </footer>
+</body>
+</html>

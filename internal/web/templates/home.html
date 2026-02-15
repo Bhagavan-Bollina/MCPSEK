@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mcpsek - MCP Server Security Scanner</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>mcpsek</h1>
+        <p class="tagline">MCP Server Security Scanner</p>
+    </header>
+
+    <main>
+        <section class="search-section">
+            <form action="/search" method="get">
+                <input type="text" name="q" placeholder="Search MCP servers..." autofocus>
+                <button type="submit">Search</button>
+            </form>
+        </section>
+
+        <section class="stats">
+            <div class="stat-card">
+                <h3>{{ index .Stats "total_servers" }}</h3>
+                <p>Servers Scanned</p>
+            </div>
+            <div class="stat-card critical">
+                <h3>{{ index .Stats "critical_findings" }}</h3>
+                <p>Critical Findings</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ index .Stats "total_mutations" }}</h3>
+                <p>Mutations Detected</p>
+            </div>
+        </section>
+
+        <section class="recent-findings">
+            <h2>Recently Flagged Servers</h2>
+            {{ if .CriticalScans }}
+            <ul class="server-list">
+                {{ range .CriticalScans }}
+                <li>
+                    <span class="badge critical">CRITICAL</span>
+                    <a href="/server/{{ .ServerID }}">View Details</a>
+                    <span class="timestamp">{{ .ScannedAt.Format "2006-01-02 15:04" }}</span>
+                </li>
+                {{ end }}
+            </ul>
+            {{ else }}
+            <p>No critical findings yet.</p>
+            {{ end }}
+        </section>
+
+        <section class="recent-mutations">
+            <h2>Recent Mutations</h2>
+            {{ if .RecentMutations }}
+            <ul class="mutation-list">
+                {{ range .RecentMutations }}
+                <li>
+                    <span class="badge {{ .Severity }}">{{ .Severity }}</span>
+                    <strong>{{ .ToolName }}</strong>
+                    <span>{{ .SeverityReason }}</span>
+                    <span class="timestamp">{{ .DetectedAt.Format "2006-01-02 15:04" }}</span>
+                </li>
+                {{ end }}
+            </ul>
+            {{ else }}
+            <p>No mutations detected yet.</p>
+            {{ end }}
+        </section>
+    </main>
+
+    <footer>
+        <p>Scanning the MCP ecosystem for security issues</p>
+    </footer>
+</body>
+</html>

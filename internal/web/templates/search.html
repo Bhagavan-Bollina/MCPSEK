@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search: {{ .Query }} - mcpsek</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1><a href="/">mcpsek</a></h1>
+    </header>
+
+    <main>
+        <section class="search-section">
+            <form action="/search" method="get">
+                <input type="text" name="q" value="{{ .Query }}" placeholder="Search MCP servers...">
+                <button type="submit">Search</button>
+            </form>
+        </section>
+
+        <section class="search-results">
+            <h2>{{ .Total }} results for "{{ .Query }}"</h2>
+
+            {{ if .Servers }}
+            <ul class="server-list">
+                {{ range .Servers }}
+                <li>
+                    <div class="server-card">
+                        <h3><a href="/server/{{ .ID }}">{{ .Name }}</a></h3>
+                        <div class="trust-score {{ if lt .TrustScore 50 }}critical{{ else if lt .TrustScore 75 }}warning{{ else }}pass{{ end }}">
+                            {{ .TrustScore }}
+                        </div>
+                        {{ if .Description }}<p>{{ .Description }}</p>{{ end }}
+                        {{ if .PackageRegistry }}<span class="badge">{{ .PackageRegistry }}</span>{{ end }}
+                    </div>
+                </li>
+                {{ end }}
+            </ul>
+            {{ else }}
+            <p>No servers found matching your query.</p>
+            {{ end }}
+        </section>
+    </main>
+
+    <footer>
+        <p><a href="/">← Back to Home</a></p>
+    </footer>
+</body>
+</html>
